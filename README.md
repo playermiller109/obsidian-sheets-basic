@@ -52,7 +52,7 @@
 ````
 </details>
 
-(2025-11-12) Test in Obsidian v 1.10.3 Sandbox Vault. left: Live Preview; right: Reading Mode:
+(20251130) Test in Obsidian v 1.10.6 Sandbox Vault. left: Live Preview; right: Reading Mode:
 
 <image width="420" src="https://github.com/user-attachments/assets/1a6da7db-33ee-44c0-bd31-5f13725944d2">
 

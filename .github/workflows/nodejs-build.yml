@@ -1,0 +1,56 @@
+# Settings - Actions - Workflow permissions should be set to Read and write
+name: Node.js CI/CD
+run-name: ${{inputs.release && inputs.param || inputs.name}}
+
+on:
+  workflow_dispatch:
+    inputs:
+      name:
+      release:
+        type: boolean
+      param:
+        default: 'patch'
+
+env:
+  ID: 'sheets-basic'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: GitHub API
+      run: |
+        git config user.name "GitHub Actions"
+        git config user.email "actions@users.noreply.github.com"
+
+    - run: npm i
+    - run: npm run build
+
+    - name: Rename main1 to main
+      run: |
+        if [ -f main1.js ]; then
+          mv main1.js main.js
+        fi
+
+    - name: Upload artifact
+      if: ${{!inputs.release}}
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{env.ID}}
+        path: |
+          main.js
+          manifest.json
+          styles.css
+
+    - name: Release
+      if: ${{inputs.release}}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        zip ${{env.ID}}.zip main.js manifest.json styles.css
+        # if [ -n "$(git tag -l)" ]; then
+        npx release-it ${{inputs.param}}

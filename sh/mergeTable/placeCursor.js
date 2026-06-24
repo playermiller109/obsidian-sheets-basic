@@ -9,51 +9,68 @@ module.exports = (table) => new class {
     const _old = table.getClosestCell
     table.getClosestCell = function(clickX, clickY) {
       const rows = this.rows
-      let closestRow = null
-      let minRowDist = Infinity
-      for (const row of rows) {
-        const trElement = row[0].el.closest('tr')
-        if (!trElement) continue
-        const rowRect = trElement.getBoundingClientRect()
-        // falls right inside
-        if (rowRect.top <= clickY && clickY <= rowRect.bottom) {
-          closestRow = row
-          minRowDist = 0
-          break
-        }
-        // the closest so far
-        const dist = Math.min(
-          Math.abs(rowRect.top - clickY),
-          Math.abs(rowRect.bottom - clickY)
-        )
-        if (dist < minRowDist) {
-          closestRow = row
-          minRowDist = dist
+
+      // falls right inside
+      const elements = document.elementsFromPoint(clickX, clickY)
+      for (const el of elements) {
+        const td = el.closest('td, th')
+        if (td) {
+          const tr = td.closest('tr')
+          if (tr) {
+            const rIdx = tr.rowIndex
+            const cIdx = td.cellIndex
+            const foundCell = rows[rIdx]?.[cIdx]
+            if (foundCell) return foundCell
+          }
         }
       }
+
+      // the closest so far
+      let closestRow = null
+      let minDySq = Infinity
+
+      for (const row of rows) {
+        const tr = row[0].el.closest('tr')
+        if (!tr) continue
+        const rect = tr.getBoundingClientRect()
+
+        let dy = 0
+        if (clickY < rect.top) dy = rect.top - clickY
+        else if (clickY > rect.bottom) dy = clickY - rect.bottom
+
+        const dySq = dy**2
+        if (dySq < minDySq) {
+          minDySq = dySq
+          closestRow = row
+          if (dySq === 0) break
+        }
+      }
+
       let closestCell = null
-      let minCellDist = Infinity
+      let minDxSq = Infinity
+
       if (closestRow) {
         for (const cell of closestRow) {
-          const cellRect = cell.el.getBoundingClientRect()
-          // falls right inside
-          if (cellRect.left <= clickX && clickX <= cellRect.right) {
+          if (cell.el.style.display === 'none') continue
+          const rect = cell.el.getBoundingClientRect()
+
+          let dx = 0
+          if (clickX < rect.left) dx = rect.left - clickX
+          else if (clickX > rect.right) dx = clickX - rect.right
+
+          const dxSq = dx**2
+          if (dxSq < minDxSq) {
+            minDxSq = dxSq
             closestCell = cell
-            minCellDist = 0
-            break
-          }
-          // the closest so far
-          const dist = Math.min(
-            Math.abs(cellRect.left - clickX),
-            Math.abs(cellRect.right - clickX)
-          )
-          if (dist < minCellDist) {
-            minCellDist = dist
-            closestCell = cell
+            if (dxSq === 0) break
           }
         }
       }
-      return closestCell || rows[0][0]
+
+      if (minDySq + minDxSq > 100**2) {
+        return null
+      }
+      return closestCell
     }
   }
   handleFocus() {
@@ -61,8 +78,7 @@ module.exports = (table) => new class {
     table.receiveCellFocus = function(row, col, func, flag) {
       if (table.rows[row]?.[col]?.el.style.display === 'none') {
         const { cell } = table.editor.tableCell
-        const cells = table.rows.flat()
-        const { row: maxRow, col: maxCol } = cells.pop()
+        const { row: maxRow, col: maxCol } = table.rows.at(-1).at(-1)
 
         if (row === cell.row) {
           while (isSign(table.rows[row]?.[col]?.text)) {

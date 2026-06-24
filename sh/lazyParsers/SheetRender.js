@@ -6,10 +6,10 @@ module.exports = (app, ob) => class extends ob.MarkdownRenderChild {
     super(el)
     const tableEl = el
     tableEl.id = tableId
-    this.domGrid = Array.from(tableEl.rows).map((tr, rowIdx) => {
-      return Array.from(tr.cells).map((td, colIdx) => ({
-        el: td, row: rowIdx, col: colIdx,
-        text: contGrid[rowIdx][colIdx],
+    this.domGrid = Array.from(tableEl.rows).map((tr, rIdx) => {
+      return Array.from(tr.cells).map((td, cIdx) => ({
+        el: td, row: rIdx, col: cIdx,
+        text: contGrid[rIdx][cIdx],
       }))
     })
     this.buildDomTable()
@@ -18,10 +18,12 @@ module.exports = (app, ob) => class extends ob.MarkdownRenderChild {
   onunload() {}
 
   buildDomTable() {
-    const cells = this.domGrid.flat()
-    for (const _cell of cells) {
-      const merged = merge(_cell, cells)
-      if (!merged) this.normalizeCell(_cell)
+    const rows = this.domGrid
+    for (const row of rows) {
+      for (const _cell of row) {
+        const merged = merge(_cell, rows)
+        if (!merged) this.normalizeCell(_cell)
+      }
     }
   }
 

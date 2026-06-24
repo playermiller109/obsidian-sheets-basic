@@ -40,19 +40,20 @@ module.exports = (plg, {ob, ViewPlugin}) => {
   const postParser = require('./lazyParsers/postParser.js')(app, ob)
   const unmergeCell = (tableCell) => {
     const { table, cell } = tableCell
-    const cells = table.rows.flat()
     const { row, col, el: cellEl } = cell
+    const rSpan = cellEl.rowSpan
+    const cSpan = cellEl.colSpan
 
-    if (cellEl.rowSpan > 1 || cellEl.colSpan > 1) {
-      cells
-        .filter(cell2 =>
-          row <= cell2.row && cell2.row < row + cellEl.rowSpan
-          && col <= cell2.col && cell2.col < col + cellEl.colSpan
-        )
-        .map(cell2 => {
-          cell2.el.removeAttribute('id')
-          cell2.el.style.display = 'table-cell'
-        })
+    if (rSpan > 1 || cSpan > 1) {
+      for (let rIdx = row; rIdx < row + rSpan; rIdx++) {
+        for (let cIdx = col; cIdx < col + cSpan; cIdx++) {
+          const _cell = table.rows[rIdx][cIdx]
+          if (_cell) {
+            _cell.el.removeAttribute('id')
+            _cell.el.style.display = 'table-cell'
+          }
+        }
+      }
       cellEl.colSpan = cellEl.rowSpan = 1
       return !0
     }

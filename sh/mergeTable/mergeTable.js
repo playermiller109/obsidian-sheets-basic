@@ -2,9 +2,15 @@ const { merge } = require('../utils.js')
 const placeCursor = require('./placeCursor.js')
 
 const mergeTable = (table) => {
-  const cells = table.rows.flat()
-  for (const _cell of cells) merge(_cell, cells)
-  placeCursor(table)
+  requestAnimationFrame(() => {
+    const rows = table.rows
+    for (const row of rows) {
+      for (const _cell of row) {
+        merge(_cell, rows)
+      }
+    }
+    placeCursor(table)
+  })
 }
 const mergeAllInView = (cm) => {
   const cmUnits = cm.docView.children

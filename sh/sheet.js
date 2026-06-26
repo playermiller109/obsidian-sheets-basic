@@ -1,6 +1,7 @@
 const { mergeTable, mergeAllInView } = require('./mergeTable/mergeTable.js')
 
-module.exports = (app, {ob, ViewPlugin}) => {
+module.exports = (plg, {ob, ViewPlugin}) => {
+  const { app } = plg
   function getActiveTableCell(cm) {
     if (!cm) return
     const view5 = cm.state.field(ob.editorInfoField)
@@ -58,33 +59,31 @@ module.exports = (app, {ob, ViewPlugin}) => {
   }
   const blockParser = require('./lazyParsers/blockParser.js')(app, ob)
 
-  return function() {
-    this.registerEditorExtension([ViewPlugin.fromClass(liveParser)])
-    this.registerMarkdownPostProcessor(postParser.main)
-    this.registerEvent(app.workspace.on('file-open', () => {
-      postParser.wipe(); focusedCM = null
-    }))
-    this.registerMarkdownCodeBlockProcessor('sheet', blockParser)
+  plg.registerEditorExtension([ViewPlugin.fromClass(liveParser)])
+  plg.registerMarkdownPostProcessor(postParser.main)
+  plg.registerEvent(app.workspace.on('file-open', () => {
+    postParser.wipe(); focusedCM = null
+  }))
+  plg.registerMarkdownCodeBlockProcessor('sheet', blockParser)
 
-    this.addCommand({
-      id: 'rebuild', name: 'rebuildCurrent',
-      callback: async () => {
-        postParser.wipe()
-        const tableCell = getActiveTableCell(focusedCM)
+  plg.addCommand({
+    id: 'rebuild', name: 'rebuildCurrent',
+    callback: async () => {
+      postParser.wipe()
+      const tableCell = getActiveTableCell(focusedCM)
 
-        if (tableCell) {
-          const checking = unmergeCell(tableCell)
-          if (!checking) mergeTable(tableCell.table)
-        }
-        else {
-          const frontView = app.workspace.getActiveFileView()
-          const frontViewType = frontView.getViewType()
-          const leaves = app.workspace.getLeavesOfType(frontViewType)
-            .filter(leaf => leaf.view.file?.path === frontView.file.path)
-          for (const leaf of leaves) await leaf.rebuildView()
-        }
-      },
-      hotkeys: [{modifiers: [], key: 'F5'}]
-    })
-  }
+      if (tableCell) {
+        const checking = unmergeCell(tableCell)
+        if (!checking) mergeTable(tableCell.table)
+      }
+      else {
+        const frontView = app.workspace.getActiveFileView()
+        const frontViewType = frontView.getViewType()
+        const leaves = app.workspace.getLeavesOfType(frontViewType)
+          .filter(leaf => leaf.view.file?.path === frontView.file.path)
+        for (const leaf of leaves) await leaf.rebuildView()
+      }
+    },
+    hotkeys: [{modifiers: [], key: 'F5'}]
+  })
 }

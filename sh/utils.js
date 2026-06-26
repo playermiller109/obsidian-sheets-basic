@@ -31,8 +31,7 @@ module.exports = new class {
     } while (cell.el.id === cellId); if (broke) return
 
     const { el: cellEl } = cell
-    cellEl[type] || Object.assgin(cellEl, { [type]: 1 })
-    cellEl[type] += 1
+    cellEl[type] = (cellEl[type] || 1) + 1
     return !0
   }
 }

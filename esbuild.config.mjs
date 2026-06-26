@@ -1,18 +1,18 @@
-import esbuild from 'esbuild';
-import process from 'process';
+import esbuild from 'esbuild'
+import process from 'process'
 import builtins from 'builtin-modules'
 
-const banner = '/* Esbuild-built. Source on GitHub. */';
+const banner = '/* Esbuild-built. Source on GitHub. */'
 
-const prod = (process.argv[2] === 'production');
+const prod = (process.argv[2] === 'production')
 
 const context = await esbuild.context({
   entryPoints: ['main_tobuild.js'],
-  outfile: 'main1.js',
+  outfile: 'main.js',
   bundle: true,
-  minify: true,
+  minify: prod,
   treeShaking: true,
-  sourcemap: prod ? false : 'inline',
+  sourcemap: false,
   format: 'cjs',
   target: 'esnext',
   external: [
@@ -34,11 +34,11 @@ const context = await esbuild.context({
   banner: {
     js: banner,
   },
-});
+})
 
 if (prod) {
-  await context.rebuild();
-  process.exit(0);
+  await context.rebuild()
+  process.exit(0)
 } else {
-  await context.watch();
+  await context.watch()
 }

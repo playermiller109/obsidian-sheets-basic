@@ -1,0 +1,4 @@
+node_modules
+main.js
+.hotreload
+git-*.bat
